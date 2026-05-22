@@ -9,21 +9,62 @@ services:
     networks:
       - ai-agents-network
     volumes:
-      - ./ollama_data:/root/.ollama
+      - ollama_data:/root/.ollama
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434" # Безопасность: доступ только локально на VPS (или через SSH-туннель)
+    environment:
+      - OLLAMA_NUM_THREADS=8     # Ограничиваем Ollama до 8 ядер из твоих 12
+      - OLLAMA_NUM_PARALLEL=1    # Запрещаем параллельные тяжелые запросы на CPU
+    deploy:
+      resources:
+        limits:
+          memory: 24gb           # Жесткий лимит памяти для Ollama
     restart: unless-stopped
 
-  openhands:
+  openhands-web:
     image: docker.all-hands.dev/all-hands-ai/openhands:latest
-    container_name: openhands-agent
+    container_name: openhands-web
     networks:
       - ai-agents-network
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"    # Безопасность: закрываем веб-интерфейс от внешнего интернета
+    environment:
+      - LLM_MODEL=ollama/deepseek-r1:7b # Рекомендую заменить на qwen2.5-coder:14b для кода
+      - LLM_BASE_URL=http://ollama:11434
+      - LLM_API_KEY=dummy
+      - DOCKER_HOST=unix:///var/run/docker.sock # КРИТИЧНО: путь к сокету внутри контейнера
     volumes:
+      - ./workspace-web:/workspace              # Bind-mount: папка на VPS для веб-проектов
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./openhands_workspace:/opt/openhands/workspace
+    deploy:
+      resources:
+        limits:
+          memory: 12gb           # Лимит памяти для веб-песочницы
     depends_on:
       - ollama
     restart: unless-stopped
+
+  openhands-acp:
+    image: docker.all-hands.dev/all-hands-ai/openhands:latest
+    container_name: openhands-acp
+    networks:
+      - ai-agents-network
+    command: openhands acp
+    environment:
+      - LLM_MODEL=ollama/deepseek-r1:7b
+      - LLM_BASE_URL=http://ollama:11434
+      - LLM_API_KEY=dummy
+      - DOCKER_HOST=unix:///var/run/docker.sock # КРИТИЧНО: путь к сокету внутри контейнера
+    volumes:
+      - ./workspace-acp:/workspace              # Bind-mount: папка на VPS для работы через VS Code
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      resources:
+        limits:
+          memory: 12gb           # Лимит памяти для ACP-песочницы
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+volumes:
+  ollama_data: # Оставляем для весов моделей, это удобно
