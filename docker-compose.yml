@@ -5,7 +5,7 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     ports:
-      - "172.17.0.1:11434:11434" # Открываем Ollama для внутренних нужд Docker шлюза
+      - "172.17.0.1:11434:11434" # Ollama слушает внутренний Docker-шлюз
     environment:
       - OLLAMA_NUM_THREADS=8
       - OLLAMA_NUM_PARALLEL=1
@@ -16,14 +16,15 @@ services:
     container_name: openhands-web
     privileged: true
     ports:
-      - "127.0.0.1:3000:3000"    # Открываем веб-панель для SSH-туннеля
+      - "127.0.0.1:3000:3000"    # Доступ к веб-панели через SSH-туннель
     environment:
       - LLM_MODEL=ollama/deepseek-r1:7b
-      # Критично: шлюз по умолчанию в Docker для связи с Ollama
-      - LLM_BASE_URL=http://172.17.0.1:11434
+      - LLM_BASE_URL=http://172.17.0.1:11434 # Связь с Ollama по IP шлюза
       - LLM_API_KEY=dummy
       - DOCKER_HOST=unix:///var/run/docker.sock
-      - SANDBOX_NETWORK=bridge   # Принудительно загоняем песочницу в дефолтную сеть
+      - SANDBOX_NETWORK=bridge
+      # КРИТИЧНО: Заставляет OpenHands связываться с песочницей напрямую внутри Docker
+      - SANDBOX_LOCAL_HOST=127.0.0.1
     volumes:
       - ./workspace:/workspace
       - /var/run/docker.sock:/var/run/docker.sock
