@@ -2,9 +2,10 @@ services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
-    network_mode: host            # Общая сеть с сервером
     volumes:
       - ollama_data:/root/.ollama
+    ports:
+      - "172.17.0.1:11434:11434" # Открываем Ollama для внутренних нужд Docker шлюза
     environment:
       - OLLAMA_NUM_THREADS=8
       - OLLAMA_NUM_PARALLEL=1
@@ -14,14 +15,15 @@ services:
     image: ghcr.io/openhands/openhands:latest
     container_name: openhands-web
     privileged: true
-    network_mode: host            # Общая сеть с сервером
+    ports:
+      - "127.0.0.1:3000:3000"    # Открываем веб-панель для SSH-туннеля
     environment:
       - LLM_MODEL=ollama/deepseek-r1:7b
-      # Так как сеть общая, контейнер видит Ollama просто на localhost!
-      - LLM_BASE_URL=http://127.0.0.1:11434
+      # Критично: шлюз по умолчанию в Docker для связи с Ollama
+      - LLM_BASE_URL=http://172.17.0.1:11434
       - LLM_API_KEY=dummy
       - DOCKER_HOST=unix:///var/run/docker.sock
-      - SANDBOX_NETWORK=bridge
+      - SANDBOX_NETWORK=bridge   # Принудительно загоняем песочницу в дефолтную сеть
     volumes:
       - ./workspace:/workspace
       - /var/run/docker.sock:/var/run/docker.sock
