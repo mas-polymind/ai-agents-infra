@@ -1,17 +1,10 @@
-networks:
-  ai-agents-network:
-    driver: bridge
-
 services:
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
-    networks:
-      - ai-agents-network
+    network_mode: host            # Общая сеть с сервером
     volumes:
       - ollama_data:/root/.ollama
-    ports:
-      - "127.0.0.1:11434:11434"
     environment:
       - OLLAMA_NUM_THREADS=8
       - OLLAMA_NUM_PARALLEL=1
@@ -20,20 +13,18 @@ services:
   openhands-web:
     image: ghcr.io/openhands/openhands:latest
     container_name: openhands-web
-    networks:
-      - ai-agents-network
-    ports:
-      - "127.0.0.1:3000:3000"    # Порт привязан к локальному хосту VPS
+    privileged: true
+    network_mode: host            # Общая сеть с сервером
     environment:
       - LLM_MODEL=ollama/deepseek-r1:7b
-      - LLM_BASE_URL=http://ollama:11434
+      # Так как сеть общая, контейнер видит Ollama просто на localhost!
+      - LLM_BASE_URL=http://127.0.0.1:11434
       - LLM_API_KEY=dummy
       - DOCKER_HOST=unix:///var/run/docker.sock
+      - SANDBOX_NETWORK=bridge
     volumes:
-      - ./workspace:/workspace   # Папка с вашим кодом на VPS
+      - ./workspace:/workspace
       - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - ollama
     restart: unless-stopped
 
 volumes:
