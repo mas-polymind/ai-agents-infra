@@ -23,32 +23,14 @@ services:
     networks:
       - ai-agents-network
     ports:
-      - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3000:3000"    # Порт привязан к локальному хосту VPS
     environment:
       - LLM_MODEL=ollama/deepseek-r1:7b
       - LLM_BASE_URL=http://ollama:11434
       - LLM_API_KEY=dummy
       - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
-      - ./workspace-web:/workspace
-      - /var/run/docker.sock:/var/run/docker.sock
-    restart: unless-stopped
-
-  # ВОЗВРАЩАЕМ ACP КОНТЕЙНЕР С ПРАВИЛЬНЫМ СТАРТОМ ЧЕРЕЗ UV
-  openhands-acp:
-    image: ghcr.io/openhands/openhands:latest
-    container_name: openhands-acp
-    networks:
-      - ai-agents-network
-    # Переопределяем стандартный запуск веб-сервера на запуск чистого ACP моста
-    entrypoint: ["uv", "run", "openhands", "acp"]
-    environment:
-      - LLM_MODEL=ollama/deepseek-r1:7b
-      - LLM_BASE_URL=http://ollama:11434
-      - LLM_API_KEY=dummy
-      - DOCKER_HOST=unix:///var/run/docker.sock
-    volumes:
-      - ./workspace:/workspace # Твоя папка проекта, которую ты видишь в VS Code
+      - ./workspace:/workspace   # Папка с вашим кодом на VPS
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - ollama
