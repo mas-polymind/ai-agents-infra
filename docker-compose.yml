@@ -5,7 +5,7 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     ports:
-      - "172.17.0.1:11434:11434"
+      - "127.0.0.1:11434:11434"  # ← Привязываем только к localhost
     environment:
       - OLLAMA_NUM_THREADS=8
       - OLLAMA_NUM_PARALLEL=1
@@ -19,15 +19,19 @@ services:
       - "127.0.0.1:3000:3000"
     environment:
       - LLM_MODEL=ollama/deepseek-r1:7b
-      - LLM_BASE_URL=http://172.17.0.1:11434
+      - LLM_BASE_URL=http://ollama:11434
       - LLM_API_KEY=dummy
       - DOCKER_HOST=unix:///var/run/docker.sock
       - SANDBOX_NETWORK=bridge
-      # CRITICAL FIXES FOR SANDBOX ERROR
       - OH_WEB_URL=http://localhost:3000
       - SANDBOX_CONTAINER_URL_PATTERN=http://localhost:{port}
       - AGENT_SERVER_USE_HOST_NETWORK=false
       - SANDBOX_LOCAL_HOST=127.0.0.1
+      # === КРИТИЧЕСКИЕ ФИКСЫ ДЛЯ ПОРТОВ ===
+      - SANDBOX_RUNTIME_CONTAINER_IMAGE=ghcr.io/openhands/agent-server:1.22.1-python
+      - AGENT_SERVER_PORT_RANGE=50000-50100  # ← Ограничиваем диапазон портов
+      - USE_HOST_NETWORK=false
+      # === КОНЕЦ ФИКСОВ ===
     volumes:
       - ./workspace:/workspace
       - /var/run/docker.sock:/var/run/docker.sock
