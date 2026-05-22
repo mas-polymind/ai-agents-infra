@@ -27,19 +27,18 @@ services:
     networks:
       - ai-agents-network
     ports:
-      - "127.0.0.1:3000:3000"    # Безопасность: закрываем веб-интерфейс от внешнего интернета
+      - "127.0.0.1:3000:3000"    # Веб-интерфейс
+      - "127.0.0.1:12000:12000"  # Специальный сетевой порт для подключения VS Code (ACP)
     environment:
-      - LLM_MODEL=ollama/deepseek-r1:7b # Рекомендую заменить на qwen2.5-coder:14b для кода
+      - LLM_MODEL=ollama/deepseek-r1:7b
       - LLM_BASE_URL=http://ollama:11434
       - LLM_API_KEY=dummy
-      - DOCKER_HOST=unix:///var/run/docker.sock # КРИТИЧНО: путь к сокету внутри контейнера
+      - DOCKER_HOST=unix:///var/run/docker.sock
     volumes:
-      - ./workspace-web:/workspace              # Bind-mount: папка на VPS для веб-проектов
+      - ./workspace:/workspace
       - /var/run/docker.sock:/var/run/docker.sock
-    deploy:
-      resources:
-        limits:
-          memory: 12gb           # Лимит памяти для веб-песочницы
+    # Заставляем контейнер при старте одновременно поднять и веб-панель, и сетевой ACP мост
+    command: sh -c "uv run openhands serve --port 3000 & uv run openhands acp --host 0.0.0.0 --port 12000"
     depends_on:
       - ollama
     restart: unless-stopped
