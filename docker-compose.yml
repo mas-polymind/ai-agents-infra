@@ -6,7 +6,7 @@ networks:
 
 services:
   ollama:
-    image: ollama/ollama:\${OLLAMA_VERSION}
+    image: ollama/ollama:${OLLAMA_VERSION:-latest}
     container_name: ollama
     networks:
       - ai-agents-network
@@ -17,15 +17,15 @@ services:
     restart: unless-stopped
 
   openhands:
-    image: docker.all-hands.dev/all-hands-ai/openhands:\${OPENHANDS_VERSION}
+    image: docker.all-hands.dev/all-hands-ai/openhands:${OPENHANDS_VERSION:-latest}
     container_name: openhands-agent
     networks:
       - ai-agents-network
     ports:
-      - "\${OPENHANDS_PORT}:3000"
-    user: "\({UID}:\){GID}"
+      - "${OPENHANDS_PORT:-3000}:3000"
+    user: "${UID:-1000}:${GID:-1000}"
     environment:
-      - SANDBOX_USER_ID=\${UID}
+      - SANDBOX_USER_ID=${UID:-1000}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./config.toml:/opt/openhands/config/config.toml
