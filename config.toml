@@ -1,0 +1,9 @@
+[core]
+workspace_base = "/opt/openhands/workspace"
+run_as_user = true
+
+[llm]
+model = "ollama/deepseek-r1:7b"
+base_url = "http://ollama:11434"
+api_key = "none"
+embedding_model = "local"
