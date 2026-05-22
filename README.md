@@ -128,7 +128,7 @@ docker exec -it ollama ollama run deepseek-r1:7b
   "multicoder.ssh.host": "<IP_ВАШЕГО_СЕРВЕРА>",
   "multicoder.ssh.username": "ubuntu",
   "multicoder.ssh.authMethod": "publickey",
-  "multicoder.ssh.privateKeyPath": "\${userHome}/.ssh/id_rsa",
+  "multicoder.ssh.privateKeyPath": "~/.ssh/id_ed25519-llm",
   
   "multicoder.workspace.remotePath": "/home/ubuntu/ai-agent-infra/openhands_workspace",
   "multicoder.workspace.localSync": true,
